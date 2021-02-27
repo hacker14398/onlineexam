@@ -1,4 +1,5 @@
 import React from 'react';
+import './App.css';
 import RecordRTC from 'recordrtc';
 import ScreenRecordPreviewModal from './ScreenRecordPreviewModal';
 import { Button, Row, Col, Container, Card, CardBody } from 'reactstrap';
@@ -18,7 +19,10 @@ class ScreenRecording extends React.Component {
       startDisable: false,
       stopDisable: true,
       loadModal: false,
+      setPlaying: false,
     }
+    this.startVideo= this.startVideo.bind(this);
+    this.stopVideo= this.stopVideo.bind(this);
   }
   //to enable audio and video pass true to disable pass false
   captureCamera = (cb) => {
@@ -50,6 +54,7 @@ startScreenRecord = async () => {
         recorder.screen = screen;
       });
     })
+    this.startVideo();
   };
   //to capture screen  we need to make sure that which media devices are captured and add listeners to // start and stop stream
   captureScreen = (callback) => {
@@ -118,6 +123,7 @@ startScreenRecord = async () => {
   }
   // stop screen recording
   stop = async () => {
+    this.stopVideo();
     await this.setState({ startDisable: true })
     recorder.stopRecording(this.stopRecordingCallback);
   }
@@ -161,7 +167,25 @@ startScreenRecord = async () => {
   openModal = async () => {
     await this.setState({ loadModal: false })
   }
-    render() {
+  startVideo = () => {
+    navigator.getUserMedia(
+      {
+        video: true,
+      },
+      (stream) => {
+        let video = document.getElementsByClassName('app__videoFeed')[0];
+        if (video) {
+          video.srcObject = stream;
+        }
+      },
+      (err) => console.error(err)
+    );
+  }
+  stopVideo = () => {
+    let video = document.getElementsByClassName('app__videoFeed')[0];
+    video.srcObject.getTracks()[0].stop();
+  };
+  render() {
     window.onbeforeunload = this.openModal;
     return (
     <div>
@@ -181,15 +205,24 @@ startScreenRecord = async () => {
                     <p className="pb-3 mt-0 mb-1 textShadowPara">* To stop recording click on stop recording</p>
                     </Col>
                 </Row>
-                <Col sm={12} className="text-center">
-                    <Button color='primary' outline onClick={() => this.startScreenRecord()} disabled={this.state.startDisable}  >Start Recording </Button>
-                    <Button color='primary' onClick={() => this.stop()} disabled={this.state.stopDisable}  >Stop Recording</Button>
+                <Col sm={12} className="text-center" className="app__input">
+                  { this.state.setPlaying == false ? 
+                    (<Button color='primary' outline onClick={() => { this.setState({setPlaying: true}); this.startScreenRecord();}} disabled={this.state.startDisable}  >Start Recording </Button>)
+                    : (<Button color='primary' onClick={() => { this.setState({setPlaying: false}); this.stop();}} disabled={this.state.stopDisable}  >Stop Recording</Button>)}
                     {this.state.startDisable && < h3 className='text-success pt-2'>Recording..</h3>}
                     {this.state.startDisable && < h3 className='text-warning pt-2'>Please dont refersh page.</h3>}
                 </Col>
                 </CardBody>
                 </Card>
             </div>
+        </div>
+        <div id="container">
+          <video height={200}
+					width={200}
+					unmuted
+					autoPlay
+					className="app__videoFeed"
+          ></video>
         </div>
         <ScreenRecordPreviewModal
         isOpenVideoModal={this.state.isOpenVideoModal}
