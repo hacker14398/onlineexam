@@ -23,6 +23,7 @@ class ScreenRecording extends React.Component {
     }
     this.startVideo= this.startVideo.bind(this);
     this.stopVideo= this.stopVideo.bind(this);
+    // this.picpic= this.picpic.bind(this);
   }
   //to enable audio and video pass true to disable pass false
   captureCamera = (cb) => {
@@ -185,6 +186,22 @@ startScreenRecord = async () => {
     let video = document.getElementsByClassName('app__videoFeed')[0];
     video.srcObject.getTracks()[0].stop();
   };
+  picpic = () => {
+    let video = document.getElementById('videoElement');
+    togglePiPMode();
+    async function togglePiPMode(event) { //disable btn ,so that no multiple request are made
+        try {
+            if (video !== document.pictureInPictureElement) {
+                await video.requestPictureInPicture();
+            }
+            else {
+                await document.exitPictureInPicture();
+            }
+        } catch (error) {
+            console.log(error);
+        } 
+    }
+  };
   render() {
     window.onbeforeunload = this.openModal;
     return (
@@ -216,13 +233,16 @@ startScreenRecord = async () => {
                 </Card>
             </div>
         </div>
-        <div id="container">
-          <video height={200}
-					width={200}
-					unmuted
-					autoPlay
-					className="app__videoFeed"
+        <div>
+          <video id="videoElement" height={200}
+            width={200}
+            unmuted
+            autoPlay
+            playsInline
+            className="app__videoFeed"
+            onDoubleClick={() => this.picpic()}
           ></video>
+          {/* <button id="PiP" onClick={()=>this.picpic()}> Enable Floating Video </button> */}
         </div>
         <ScreenRecordPreviewModal
         isOpenVideoModal={this.state.isOpenVideoModal}
